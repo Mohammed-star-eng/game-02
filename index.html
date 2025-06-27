@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WATER RUN - OBSTACLE DASH</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-root">
+    <header id="game-header">
+      <img id="logo" src="img/logo.svg" alt="charity: water supporter" />
+      <div id="header-center">
+        <div id="main-title">WATER RUN</div>
+        <div id="subtitle">OBSTACLE DASH</div>
+      </div>
+      <div id="score-box">SCORE: <span id="score">0</span></div>
+    </header>
+    <main>
+      <div id="canvas-container">
+        <canvas id="game-canvas" width="805" height="372"></canvas>
+        <button id="start-btn">Start</button>
+        <div id="info-card" class="hidden">
+          <div class="fact-content">
+            <span class="water-drop">&#128167;</span>
+            <div class="fact-title">
+              <span class="fact-text-title">DID YOU KNOW?</span>
+            </div>
+            <div id="fact-text"></div>
+          </div>
+          <button id="close-fact-btn">Close</button>
+        </div>
+        <div id="call-to-action" class="hidden">
+          <canvas id="confetti-canvas" style="display:block;margin:0 auto;padding:0;height:48px;max-height:48px;"></canvas>
+          <div class="cta-title" style="margin-top:0;margin-bottom:10px;"><span class="trophy">🏆</span>Congratulations!</div>
+          <div class="cta-message">🎉 Every drop you collected brings hope!<br>🌍 But millions still walk miles for water every day.<br>💧 Your action can change a life—will you help bring clean water to those in need? 🙏</div>
+          <div class="cta-actions" style="gap:10px; flex-direction: column; align-items: center; width: 100%;">
+            <div class="cta-row" style="display: flex; flex-direction: row; gap: 10px; width: 100%; justify-content: center;">
+              <button class="cta-btn" id="learn-more-btn">
+                <span class="cta-icon">&#8505;</span>
+                <span>Learn more</span>
+              </button>
+              <button class="cta-btn" id="donate-btn">
+                <span class="cta-icon">&#128176;</span>
+                <span>Donate</span>
+              </button>
+            </div>
+            <button class="cta-btn" id="replay-btn">
+              <span class="cta-icon">&#8635;</span>
+              <span>Replay</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="level-bar">
+        <span id="level-label">Level <span id="level-num">1</span></span>
+        <div id="progress-bar">
+          <div class="star" id="star1">&#9733;</div>
+          <div class="star" id="star2">&#9733;</div>
+          <div class="star" id="star3">&#9733;</div>
+          <div id="progress-track">
+            <div id="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
