@@ -1,6 +1,251 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
+// --- ENERGETIC SOUND SYSTEM ---
+class EnergeticSoundSystem {
+  constructor() {
+    this.audioContext = null;
+    this.masterVolume = 0.4; // Perfect energy level
+    this.enabled = true;
+    this.initAudioContext();
+  }
+
+  initAudioContext() {
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.log('Web Audio API not supported');
+      this.enabled = false;
+    }
+  }
+
+  // Enhanced tone creation with more dynamic range
+  createTone(frequency, duration, type = 'sine', volume = 0.15, attack = 0.01, decay = 0.1) {
+    if (!this.enabled || !this.audioContext) return;
+    
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+    
+    oscillator.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+    oscillator.type = type;
+    
+    // Add filter for more character
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(frequency * 3, this.audioContext.currentTime);
+    filter.Q.setValueAtTime(1, this.audioContext.currentTime);
+    
+    // More dynamic envelope
+    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume * this.masterVolume, this.audioContext.currentTime + attack);
+    gainNode.gain.exponentialRampToValueAtTime(volume * this.masterVolume * 0.7, this.audioContext.currentTime + attack + decay);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + duration);
+  }
+
+  // Enhanced noise with filtering
+  createEnergeticNoise(duration, volume = 0.08, filterFreq = 1200) {
+    if (!this.enabled || !this.audioContext) return;
+    
+    const bufferSize = this.audioContext.sampleRate * duration;
+    const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.2;
+    }
+    
+    const noise = this.audioContext.createBufferSource();
+    const gainNode = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+    
+    noise.buffer = buffer;
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(filterFreq, this.audioContext.currentTime);
+    filter.Q.setValueAtTime(2, this.audioContext.currentTime);
+    
+    gainNode.gain.setValueAtTime(volume * this.masterVolume, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+    
+    noise.start(this.audioContext.currentTime);
+    noise.stop(this.audioContext.currentTime + duration);
+  }
+
+  // ENERGETIC JUMP - Powerful whoosh with rising pitch
+  playJump() {
+    // Main jump sound - rising whoosh
+    this.createTone(150, 0.2, 'sawtooth', 0.18, 0.005, 0.05);
+    setTimeout(() => this.createTone(250, 0.15, 'sine', 0.12, 0.005, 0.05), 30);
+    setTimeout(() => this.createTone(350, 0.1, 'triangle', 0.08, 0.005, 0.05), 80);
+    // Add some energy noise
+    this.createEnergeticNoise(0.12, 0.06, 800);
+  }
+
+  // DYNAMIC LANDING - Impactful thud with reverb-like effect
+  playLanding() {
+    // Deep impact
+    this.createTone(60, 0.25, 'square', 0.15, 0.001, 0.08);
+    this.createTone(80, 0.2, 'sine', 0.12, 0.005, 0.06);
+    // Impact noise
+    this.createEnergeticNoise(0.15, 0.08, 600);
+    // Echo effect
+    setTimeout(() => this.createTone(70, 0.15, 'sine', 0.08), 100);
+  }
+
+  // EXCITING DROP COLLECTION - Bright, crystalline sound
+  playDropCollect() {
+    // Bright main tone
+    this.createTone(1000, 0.3, 'sine', 0.18, 0.005, 0.1);
+    setTimeout(() => this.createTone(1400, 0.25, 'triangle', 0.15, 0.005, 0.08), 50);
+    setTimeout(() => this.createTone(1800, 0.2, 'sine', 0.12, 0.005, 0.06), 100);
+    // Sparkle effect
+    setTimeout(() => this.createTone(2400, 0.15, 'square', 0.08, 0.005, 0.04), 150);
+    // Add shimmer
+    this.createEnergeticNoise(0.2, 0.04, 2000);
+  }
+
+  // POWERFUL ROCK HIT - Dramatic crash
+  playRockHit() {
+    // Main impact
+    this.createTone(100, 0.4, 'square', 0.25, 0.001, 0.15);
+    this.createTone(150, 0.35, 'sawtooth', 0.2, 0.005, 0.12);
+    // Crash noise
+    this.createEnergeticNoise(0.3, 0.15, 400);
+    // Reverb tail
+    setTimeout(() => this.createTone(80, 0.25, 'sine', 0.12), 100);
+    setTimeout(() => this.createEnergeticNoise(0.2, 0.08, 300), 150);
+  }
+
+  // DRAMATIC LIFE LOST - Descending tragic sequence
+  playLifeLost() {
+    this.createTone(400, 0.4, 'sine', 0.15, 0.02, 0.15);
+    setTimeout(() => this.createTone(320, 0.4, 'triangle', 0.12, 0.02, 0.15), 200);
+    setTimeout(() => this.createTone(240, 0.5, 'sine', 0.1, 0.02, 0.2), 400);
+    // Add dramatic reverb
+    setTimeout(() => this.createTone(180, 0.6, 'sine', 0.08), 600);
+  }
+
+  // SHARP HEART BREAK - Quick dramatic crack
+  playHeartBreak() {
+    this.createEnergeticNoise(0.08, 0.06, 1500);
+    this.createTone(800, 0.12, 'square', 0.08, 0.001, 0.04);
+    setTimeout(() => this.createTone(400, 0.1, 'sawtooth', 0.06), 50);
+  }
+
+  // TRIUMPHANT LEVEL COMPLETE - Grand celebration
+  playLevelComplete() {
+    const notes = [523, 659, 784, 1047, 1319]; // C, E, G, C, E
+    notes.forEach((note, i) => {
+      setTimeout(() => {
+        this.createTone(note, 0.4, 'sine', 0.18, 0.01, 0.15);
+        this.createTone(note * 1.5, 0.3, 'triangle', 0.12, 0.02, 0.1);
+      }, i * 120);
+    });
+    // Add celebration sparkle
+    setTimeout(() => this.createEnergeticNoise(0.5, 0.08, 3000), 200);
+  }
+
+  // ENERGETIC LEVEL UP - Victory fanfare with harmonics
+  playLevelUp() {
+    const notes = [440, 554, 659, 880]; // A, C#, E, A
+    notes.forEach((note, i) => {
+      setTimeout(() => {
+        this.createTone(note, 0.3, 'sine', 0.15, 0.005, 0.1);
+        this.createTone(note * 1.5, 0.25, 'triangle', 0.1, 0.01, 0.08);
+        this.createTone(note * 2, 0.2, 'square', 0.06, 0.015, 0.06);
+      }, i * 100);
+    });
+  }
+
+  // MAGICAL STAR COLLECTION - Twinkling cascade
+  playStarCollect() {
+    this.createTone(1600, 0.15, 'sine', 0.12, 0.002, 0.05);
+    setTimeout(() => this.createTone(2000, 0.15, 'triangle', 0.1, 0.002, 0.05), 40);
+    setTimeout(() => this.createTone(2400, 0.2, 'sine', 0.12, 0.002, 0.06), 80);
+    setTimeout(() => this.createTone(3200, 0.15, 'square', 0.08, 0.002, 0.04), 140);
+    // Sparkle trail
+    this.createEnergeticNoise(0.25, 0.05, 2800);
+  }
+
+  // EPIC GAME START - Rising heroic theme
+  playGameStart() {
+    this.createTone(330, 0.2, 'sine', 0.12, 0.01, 0.08);
+    setTimeout(() => this.createTone(440, 0.2, 'triangle', 0.14, 0.01, 0.08), 150);
+    setTimeout(() => this.createTone(554, 0.25, 'sine', 0.16, 0.01, 0.1), 300);
+    setTimeout(() => this.createTone(659, 0.3, 'triangle', 0.18, 0.01, 0.12), 450);
+    // Add energy buildup
+    setTimeout(() => this.createEnergeticNoise(0.4, 0.06, 1500), 200);
+  }
+
+  // DRAMATIC GAME OVER - Emotional descent
+  playGameOver() {
+    this.createTone(523, 0.6, 'sine', 0.15, 0.03, 0.2);
+    setTimeout(() => this.createTone(440, 0.6, 'triangle', 0.12, 0.03, 0.2), 300);
+    setTimeout(() => this.createTone(349, 0.8, 'sine', 0.1, 0.03, 0.25), 600);
+    setTimeout(() => this.createTone(262, 1.0, 'sine', 0.08, 0.03, 0.3), 900);
+    // Dramatic reverb
+    setTimeout(() => this.createEnergeticNoise(0.6, 0.06, 500), 400);
+  }
+
+  // ATTENTION-GRABBING FACT CARD - Notification chime
+  playFactCard() {
+    this.createTone(800, 0.2, 'sine', 0.1, 0.01, 0.08);
+    setTimeout(() => this.createTone(1200, 0.25, 'triangle', 0.12, 0.01, 0.1), 120);
+    setTimeout(() => this.createTone(1000, 0.3, 'sine', 0.08, 0.01, 0.12), 250);
+  }
+
+  // SATISFYING BUTTON CLICK - Sharp, responsive
+  playButtonClick() {
+    this.createTone(600, 0.1, 'square', 0.08, 0.001, 0.03);
+    this.createEnergeticNoise(0.06, 0.04, 1200);
+    setTimeout(() => this.createTone(450, 0.08, 'sine', 0.06), 30);
+  }
+
+  // SUBTLE BUTTON HOVER - Quick highlight
+  playButtonHover() {
+    this.createTone(800, 0.08, 'triangle', 0.05, 0.002, 0.02);
+  }
+
+  // EXPLOSIVE COMBO SYSTEM - Escalating excitement
+  playCombo(comboCount) {
+    const baseFreq = 1000 + (comboCount * 200);
+    const volume = Math.min(0.25, 0.12 + comboCount * 0.03);
+    
+    // Main combo tone
+    this.createTone(baseFreq, 0.2, 'sine', volume, 0.005, 0.08);
+    this.createTone(baseFreq * 1.5, 0.15, 'triangle', volume * 0.7, 0.008, 0.06);
+    
+    // Add excitement for higher combos
+    if (comboCount >= 3) {
+      setTimeout(() => this.createTone(baseFreq * 2, 0.12, 'square', volume * 0.5), 40);
+      this.createEnergeticNoise(0.15, 0.06, 2000 + comboCount * 200);
+    }
+    
+    // Explosive effect for mega combos
+    if (comboCount >= 5) {
+      setTimeout(() => this.createTone(baseFreq * 3, 0.1, 'sine', volume * 0.4), 80);
+      setTimeout(() => this.createEnergeticNoise(0.2, 0.08, 3000), 60);
+    }
+  }
+}
+
+// Initialize energetic sound system
+const soundSystem = new EnergeticSoundSystem();
+
+// Track combo system for drop collection
+let dropCombo = 0;
+let lastDropTime = 0;
+
 // Load the SVG mountain images
 const mountainImg = new Image();
 mountainImg.src = 'img/mountain.svg';
@@ -45,6 +290,19 @@ dropImg.src = 'img/drop.svg';
 // Load the ball SVG image
 const ballImg = new Image();
 ballImg.src = 'img/ball.svg';
+// Load the bone SVG image
+const boneImg = new Image();
+boneImg.src = 'img/bone.svg';
+
+// Create buried bones positions (scattered across entire brown rectangle)
+const buriedBones = [
+  { x: 0.15, y: 0.2, rotation: 45, scale: 0.5 },
+  { x: 0.35, y: 0.4, rotation: -60, scale: 0.45 },
+  { x: 0.65, y: 0.25, rotation: 120, scale: 0.55 },
+  { x: 0.85, y: 0.5, rotation: -30, scale: 0.48 },
+  { x: 0.25, y: 0.7, rotation: 90, scale: 0.52 },
+  { x: 0.75, y: 0.8, rotation: -150, scale: 0.47 }
+]; // x and y are percentages across entire brown rectangle, rotation in degrees, scale as multiplier
 
 function drawOnlyMountains() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -123,6 +381,23 @@ function drawOnlyMountains() {
     const topYRect3 = yellowRectBottom;
     const drawHRect3 = canvas.height - topYRect3;
     ctx.drawImage(rect3Img, 0, 0, svgWRect3, svgHRect3, 0, topYRect3, drawWRect3, drawHRect3);
+    
+    // Draw buried bones scattered across the entire brown rectangle
+    if (boneImg.complete && boneImg.naturalWidth) {
+      buriedBones.forEach(bone => {
+        const boneX = bone.x * canvas.width;
+        const boneY = topYRect3 + (bone.y * drawHRect3);
+        const boneW = 76 * bone.scale * (canvas.width / 805);
+        const boneH = 76 * bone.scale * (canvas.width / 805);
+        
+        ctx.save();
+        ctx.translate(boneX + boneW/2, boneY + boneH/2);
+        ctx.rotate((bone.rotation * Math.PI) / 180);
+        ctx.globalAlpha = 0.35; // Semi-transparent for buried effect
+        ctx.drawImage(boneImg, -boneW/2, -boneH/2, boneW, boneH);
+        ctx.restore();
+      });
+    }
   } else {
     rect3Img.onload = () => { drawOnlyMountains(); };
   }
@@ -264,6 +539,9 @@ let showFactCard = false;
 let showCtaCard = false;
 let letsGoTimeout = null;
 let pendingLevelUp = false; // <-- add this
+// NEW: Lives system variables
+let lives = 5;
+let showGameOverCard = false;
 
 // --- DOM ELEMENTS ---
 const startBtn = document.getElementById('start-btn');
@@ -280,6 +558,14 @@ const star1 = document.getElementById('star1');
 const star2 = document.getElementById('star2');
 const star3 = document.getElementById('star3');
 const progressFill = document.getElementById('progress-fill');
+// NEW: Lives system DOM elements
+const heart1 = document.getElementById('heart1');
+const heart2 = document.getElementById('heart2');
+const heart3 = document.getElementById('heart3');
+const heart4 = document.getElementById('heart4');
+const heart5 = document.getElementById('heart5');
+const gameOverCard = document.getElementById('game-over-card');
+const restartGameBtn = document.getElementById('restart-game-btn');
 const letsGo = (() => {
   let el = document.getElementById('lets-go');
   if (!el) {
@@ -601,9 +887,13 @@ function updateLevelDisplay() {
   [star1, star2, star3].forEach((star, idx) => {
     // Each star represents 1/3 of total progress
     const starThreshold = (idx + 1) / 3;
-    if (totalProgress >= starThreshold) {
+    const wasActive = star.classList.contains('active');
+    const shouldBeActive = totalProgress >= starThreshold;
+    
+    if (shouldBeActive && !wasActive) {
       star.classList.add('active');
-    } else {
+      soundSystem.playStarCollect(); // MAGICAL STAR COLLECTION SOUND!
+    } else if (!shouldBeActive && wasActive) {
       star.classList.remove('active');
     }
   });
@@ -618,6 +908,79 @@ function showLetsGo() {
     letsGo.classList.remove('visible');
   }, 1500);
 }
+
+// --- LIVES SYSTEM FUNCTIONS ---
+function updateLivesDisplay() {
+  const hearts = [heart1, heart2, heart3, heart4, heart5];
+  hearts.forEach((heart, index) => {
+    if (index < lives) {
+      heart.classList.remove('lost');
+    } else {
+      heart.classList.add('lost');
+    }
+  });
+}
+
+function loseLife() {
+  lives--;
+  soundSystem.playLifeLost(); // DRAMATIC LIFE LOST SOUND!
+  soundSystem.playHeartBreak(); // SHARP HEART BREAK SOUND!
+  updateLivesDisplay();
+  
+  if (lives <= 0) {
+    soundSystem.playGameOver(); // DRAMATIC GAME OVER SOUND!
+    showGameOver();
+    return true; // Game over
+  }
+  return false; // Continue game
+}
+
+function showGameOver() {
+  gameRunning = false;
+  showGameOverCard = true;
+  gameOverCard.classList.remove('hidden');
+}
+
+function hideGameOver() {
+  showGameOverCard = false;
+  gameOverCard.classList.add('hidden');
+}
+
+function resetGame() {
+  hideGameOver();
+  lives = 5;
+  score = 0;
+  level = 1;
+  speed = 5.5;
+  updateLivesDisplay();
+  updateScoreDisplay();
+  updateLevelDisplay();
+  resetLevel();
+}
+
+// --- BUTTON HOVER SOUND EFFECTS ---
+// Add hover sounds to all buttons
+function addButtonHoverSounds() {
+  const buttons = [
+    startBtn, 
+    closeFactBtn, 
+    learnMoreBtn, 
+    donateBtn, 
+    replayBtn, 
+    restartGameBtn
+  ];
+  
+  buttons.forEach(button => {
+    if (button) {
+      button.addEventListener('mouseenter', () => {
+        soundSystem.playButtonHover(); // SUBTLE BUTTON HOVER SOUND!
+      });
+    }
+  });
+}
+
+// Initialize button hover sounds
+addButtonHoverSounds();
 
 // --- COLLISION DETECTION ---
 function collides(ax, ay, aw, ah, bx, by, bw, bh) {
@@ -748,6 +1111,7 @@ function gameLoop() {
       ballY = GROUND_Y;
       isJumping = false;
       ballVY = 0;
+      soundSystem.playLanding(); // ENERGETIC LANDING SOUND!
     }
   }
 
@@ -759,9 +1123,16 @@ function gameLoop() {
     if (
       collides(ballX, ballY, ballW, ballH, obs.x, obs.y, obs.w, obs.h)
     ) {
-      // Restart level, keep score/level
-      resetLevel();
-      return requestAnimationFrame(gameLoop);
+      soundSystem.playRockHit(); // ENERGETIC ROCK HIT SOUND!
+      // Lose a life instead of restarting level immediately
+      if (loseLife()) {
+        // Game over - all lives lost
+        return;
+      } else {
+        // Still have lives, restart level
+        resetLevel();
+        return requestAnimationFrame(gameLoop);
+      }
     }
   }
 
@@ -773,10 +1144,27 @@ function gameLoop() {
     ) {
       drop.collected = true;
       score += 3;
+      
+      // ENERGETIC DROP COLLECTION SOUND with COMBO SYSTEM!
+      const currentTime = Date.now();
+      if (currentTime - lastDropTime < 1000) { // Within 1 second
+        dropCombo++;
+      } else {
+        dropCombo = 1; // Reset combo
+      }
+      lastDropTime = currentTime;
+      
+      if (dropCombo > 1) {
+        soundSystem.playCombo(dropCombo); // Escalating combo sound!
+      } else {
+        soundSystem.playDropCollect(); // Standard collection sound
+      }
+      
       updateScoreDisplay();
 
       // Win condition at 180 points (level 3 complete)
       if (score === 180) {
+        soundSystem.playLevelComplete(); // TRIUMPHANT LEVEL COMPLETE SOUND!
         showCTA();
         return;
       }
@@ -786,6 +1174,7 @@ function gameLoop() {
         if (score % 60 === 0 && level < 3) {
           pendingLevelUp = true;
         }
+        soundSystem.playFactCard(); // ATTENTION-GRABBING FACT CARD SOUND!
         showFact();
         return;
       }
@@ -793,6 +1182,7 @@ function gameLoop() {
       if (score > 0 && score % 60 === 0 && level < 3) {
         level++;
         speed += 1.7; // Faster speed increase per level
+        soundSystem.playLevelUp(); // ENERGETIC LEVEL UP SOUND!
         updateLevelDisplay();
         showLetsGo();
         resetLevel();
@@ -836,18 +1226,24 @@ function ballFallInLoop() {
 
 // --- EVENT HANDLERS ---
 startBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
+  soundSystem.playGameStart(); // EPIC GAME START SOUND!
   startBtn.classList.add('hidden');
   hideCTA();
+  hideGameOver(); // NEW: Hide game over card if visible
   infoCard.classList.add('hidden');
   score = 0;
   level = 1;
   speed = 5.0; // Starting speed when game begins
+  lives = 5; // NEW: Reset lives
   usedFacts = [];
   updateScoreDisplay();
   updateLevelDisplay();
+  updateLivesDisplay(); // NEW: Update lives display
   resetLevel();
   showFactCard = false;
   showCtaCard = false;
+  showGameOverCard = false; // NEW: Reset game over state
   // Animate ball falling in
   ballFallingIn = true;
   startBallFallIn();
@@ -857,21 +1253,33 @@ canvas.addEventListener('pointerdown', () => {
   if (gameRunning && !isJumping && !ballFallingIn) {
     ballVY = JUMP_VELOCITY;
     isJumping = true;
+    soundSystem.playJump(); // ENERGETIC JUMP SOUND!
   }
 });
 
 closeFactBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
   hideFact();
 });
 
 learnMoreBtn && learnMoreBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
   window.open('https://www.charitywater.org/about', '_blank');
 });
 donateBtn && donateBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
   window.open('https://www.charitywater.org/donate', '_blank');
 });
 replayBtn && replayBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
   hideCTA();
+  startBtn.classList.remove('hidden');
+});
+
+// NEW: Restart game button event listener
+restartGameBtn && restartGameBtn.addEventListener('click', () => {
+  soundSystem.playButtonClick(); // SATISFYING BUTTON CLICK SOUND!
+  resetGame();
   startBtn.classList.remove('hidden');
 });
 
@@ -936,4 +1344,5 @@ function animateBackground() {
 // --- START ANIMATION ON DOM CONTENT LOADED ---
 window.addEventListener('DOMContentLoaded', () => {
   animateBackground();
+  updateLivesDisplay(); // NEW: Initialize lives display
 });
