@@ -1952,3 +1952,9 @@ main {
     top: calc(180px * (100vw / 805));
   }
 }
+/* Desktop canvas sizing - only affects canvas container width */
+@media (min-width: 1024px) {
+  #canvas-container {
+    max-width: 950px; /* Increase canvas area for desktop */
+  }
+}
